@@ -1,5 +1,4 @@
 import telebot
-import sqlite3
 import config
 import random
 from telebot import types
@@ -9,12 +8,27 @@ from database import Database
 db = Database("adventurers.db")
 bot = telebot.TeleBot(config.TOKEN)
 
-
 answers_for_dices = ["А пожалуйста!", "Да на здоровье!", "Получай!", \
 "Что ещё хочешь?", "Может этого хватит?", "Сколько тебе ещё надо?", \
 "А вот в наше время людям хватало одного кубика d6", "Серьёзно?", "Астанавись!"]
 
+dices = ["d4", "d6", "d8", "d10", "d12", "d20"]
 
+def show_does_not_exist(message):
+    if db.if_character_exist(message.chat.id) == "does_not_exist":
+        bot.send_message(message.chat.id, 'В этом мире у тебя никого нет. Ты полностью один. Смирись или создай себе перса через /start')
+        return False
+    return True
+
+def delete_character(message):
+    markup = types.InlineKeyboardMarkup()
+    item1 = types.InlineKeyboardButton(
+        "Отменить и удалить перса",
+        callback_data='delete_character'
+        )
+    markup.add(item1)
+    msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+    return msg
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -28,19 +42,14 @@ def start(message):
     markup.add(item1, item2, item3, item4, item5, item6)
     bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}!\nПогнали?', reply_markup=markup)
     
-
-
 # Заполнение характеристик персонажа
 def create_name(message):
     try:    
         db.input_character_data(message, 'Name')
         msg = bot.send_message(message.chat.id, 'Класс:')
         bot.register_next_step_handler(msg, create_class)
-    except Exception as e:
-        markup = types.InlineKeyboardMarkup()
-        item1 = types.InlineKeyboardButton("Отменить и удалить перса", callback_data='delete_character')
-        markup.add(item1)
-        msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+    except Exception as e:        
+        msg = delete_character(message)
         bot.register_next_step_handler(msg, create_name)
 
 def create_class(message):
@@ -49,10 +58,7 @@ def create_class(message):
         msg = bot.send_message(message.chat.id, 'Раса:')
         bot.register_next_step_handler(msg, create_race)
     except Exception as e:
-        markup = types.InlineKeyboardMarkup()
-        item1 = types.InlineKeyboardButton("Отменить и удалить перса", callback_data='delete_character')
-        markup.add(item1)
-        msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+        msg = delete_character(message)
         bot.register_next_step_handler(msg, create_class)
 
 def create_race(message):
@@ -61,10 +67,7 @@ def create_race(message):
         msg = bot.send_message(message.chat.id, 'Сила:')
         bot.register_next_step_handler(msg, create_strength)      
     except Exception as e:
-        markup = types.InlineKeyboardMarkup()
-        item1 = types.InlineKeyboardButton("Отменить и удалить перса", callback_data='delete_character')
-        markup.add(item1)
-        msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+        msg = delete_character(message)
         bot.register_next_step_handler(msg, create_race)
 
 def create_strength(message):
@@ -74,10 +77,7 @@ def create_strength(message):
         msg = bot.send_message(message.chat.id, 'Ловкость:')
         bot.register_next_step_handler(msg, create_dexterity)
     else:
-        markup = types.InlineKeyboardMarkup()
-        item1 = types.InlineKeyboardButton("Отменить и удалить перса", callback_data='delete_character')
-        markup.add(item1)
-        msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+        msg = delete_character(message)
         bot.register_next_step_handler(msg, create_strength)
 
 def create_dexterity(message):
@@ -87,10 +87,7 @@ def create_dexterity(message):
         msg = bot.send_message(message.chat.id, 'Телосложение:')
         bot.register_next_step_handler(msg, create_constitution)      
     else:
-        markup = types.InlineKeyboardMarkup()
-        item1 = types.InlineKeyboardButton("Отменить и удалить перса", callback_data='delete_character')
-        markup.add(item1)
-        msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+        msg = delete_character(message)
         bot.register_next_step_handler(msg, create_dexterity)
 
 def create_constitution(message):
@@ -100,10 +97,7 @@ def create_constitution(message):
         msg = bot.send_message(message.chat.id, 'Интеллект:')
         bot.register_next_step_handler(msg, create_intelligence)      
     else:
-        markup = types.InlineKeyboardMarkup()
-        item1 = types.InlineKeyboardButton("Отменить и удалить перса", callback_data='delete_character')
-        markup.add(item1)
-        msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+        msg = delete_character(message)
         bot.register_next_step_handler(msg, create_constitution)
 
 def create_intelligence(message):
@@ -113,10 +107,7 @@ def create_intelligence(message):
         msg = bot.send_message(message.chat.id, 'Мудрость:')
         bot.register_next_step_handler(msg, create_wisdom)      
     else:
-        markup = types.InlineKeyboardMarkup()
-        item1 = types.InlineKeyboardButton("Отменить и удалить перса", callback_data='delete_character')
-        markup.add(item1)
-        msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+        msg = delete_character(message)
         bot.register_next_step_handler(msg, create_intelligence)
 
 def create_wisdom(message):
@@ -127,10 +118,7 @@ def create_wisdom(message):
         msg = bot.send_message(message.chat.id, 'Харизма:')
         bot.register_next_step_handler(msg, create_charisma)      
     else:
-        markup = types.InlineKeyboardMarkup()
-        item1 = types.InlineKeyboardButton("Отменить и удалить перса", callback_data='delete_character')
-        markup.add(item1)
-        msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+        msg = delete_character(message)
         bot.register_next_step_handler(msg, create_wisdom)
 
 def create_charisma(message):
@@ -141,10 +129,7 @@ def create_charisma(message):
         msg = bot.send_message(message.chat.id, 'Уровень:')
         bot.register_next_step_handler(msg, create_level)      
     else:
-        markup = types.InlineKeyboardMarkup()
-        item1 = types.InlineKeyboardButton("Отменить и удалить перса", callback_data='delete_character')
-        markup.add(item1)
-        msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+        msg = delete_character(message)
         bot.register_next_step_handler(msg, create_charisma)
 
 def create_level(message):
@@ -155,10 +140,7 @@ def create_level(message):
         msg = bot.send_message(message.chat.id, 'КД:')
         bot.register_next_step_handler(msg, create_armor_class)      
     else:
-        markup = types.InlineKeyboardMarkup()
-        item1 = types.InlineKeyboardButton("Отменить и удалить перса", callback_data='delete_character')
-        markup.add(item1)
-        msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+        msg = delete_character(message)
         bot.register_next_step_handler(msg, create_level)
 
 def create_armor_class(message):
@@ -168,10 +150,7 @@ def create_armor_class(message):
         msg = bot.send_message(message.chat.id, 'Максимум хитов:')
         bot.register_next_step_handler(msg, create_HP_max)
     else:
-        markup = types.InlineKeyboardMarkup()
-        item1 = types.InlineKeyboardButton("Отменить и удалить перса", callback_data='delete_character')
-        markup.add(item1)
-        msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+        msg = delete_character(message)
         bot.register_next_step_handler(msg, create_armor_class)
 
 def create_HP_max(message):
@@ -181,10 +160,7 @@ def create_HP_max(message):
         msg = bot.send_message(message.chat.id, 'Кость хитов:')
         bot.register_next_step_handler(msg, create_hit_dice)
     else:
-        markup = types.InlineKeyboardMarkup()
-        item1 = types.InlineKeyboardButton("Отменить и удалить перса", callback_data='delete_character')
-        markup.add(item1)
-        msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+        msg = delete_character(message)
         bot.register_next_step_handler(msg, create_HP_max)
 
 def create_hit_dice(message):
@@ -192,12 +168,8 @@ def create_hit_dice(message):
         db.input_character_data(message, 'Hit_dice')
         bot.send_message(message.chat.id, 'Поздравляю, персонаж добавлен!')
     except Exception as e:
-        markup = types.InlineKeyboardMarkup()
-        item1 = types.InlineKeyboardButton("Отменить и удалить перса", callback_data='delete_character')
-        markup.add(item1)
-        msg = bot.reply_to(message, 'Ты втираешь мне какую-то дичь! Введи нормально', reply_markup=markup)
+        msg = delete_character(message)
         bot.register_next_step_handler(msg, create_hit_dice)
-
 
 def create_feature_name(message):
     feature_name = message.text
@@ -211,7 +183,6 @@ def create_feature_description(message, feature_name):
 def delete_feature_number(message):
     db.delete_feature(message)
     bot.send_message(message.chat.id, 'Умение потёрто')
-
 
 # CallBack запросы
 @bot.callback_query_handler(func=lambda call: True)
@@ -228,29 +199,19 @@ def callback_inline(call):
                     text="ГДЕ ЛЁХА???")
 
             # Повторный бросок кубика
-            if call.data in ('d4', 'd6', 'd8', 'd10', 'd12', 'd20'):
-                if call.data == 'd4':
-                    bot.send_message(call.message.chat.id, f'd4: {str(random.randint(1,4))}')
-                elif call.data == 'd6':
-                    bot.send_message(call.message.chat.id, f'd6: {str(random.randint(1,6))}')
-                elif call.data == 'd8':
-                    bot.send_message(call.message.chat.id, f'd8: {str(random.randint(1,8))}')
-                elif call.data == 'd10':
-                    bot.send_message(call.message.chat.id, f'd10: {str(random.randint(0,9))}')
-                elif call.data == 'd12':
-                    bot.send_message(call.message.chat.id, f'd12: {str(random.randint(1,12))}')
-                elif call.data == 'd20':
-                    bot.send_message(call.message.chat.id, f'd20: {str(random.randint(1,20))}')
+            if call.data in dices:
+                dice = int(call.data.replace("d", ""))
+                if call.data == "d10":
+                    dice -= 1
+                bot.send_message(call.message.chat.id, f'{call.data}: {str(random.randint(1,dice))}')
                 # Приколдэс на переброс кубика
                 bot.answer_callback_query(callback_query_id=call.id, show_alert=False,
                     text=random.choice(answers_for_dices))
-
 
             # Добавляем умение
             if call.data == "add_feature":
                 msg = bot.send_message(call.message.chat.id, 'Название умения:')
                 bot.register_next_step_handler(msg, create_feature_name)
-
 
             # Удаляем умение
             if call.data == "delete_feature":
@@ -260,15 +221,12 @@ def callback_inline(call):
     except Exception as e:
         print(repr(e))
 
-
 # Текстовые запросы
 @bot.message_handler(content_types=['text'])
 def bot_message(message):
     if message.chat.type == 'private':
-
         # Добавление персонажа
         if message.text == 'Создать персонажа':
-            
             if db.if_character_exist(message.chat.id) == "exist":
                 bot.send_message(message.chat.id, 'Сначала загуби предыдущего')
             else:
@@ -283,10 +241,7 @@ def bot_message(message):
 
         # Удаление персонажа
         elif message.text == 'Удалить персонажа':
-            # Аннигилирование перса
-            if db.if_character_exist(message.chat.id) == "does_not_exist":
-                bot.send_message(message.chat.id, 'В этом мире у тебя никого нет. Ты полностью один. Смирись или создай себе перса через /start')
-            else:
+            if show_does_not_exist(message):
                 # Уточнение запроса
                 markup = types.InlineKeyboardMarkup()
                 item1 = types.InlineKeyboardButton("Загубить своего перса", callback_data='delete_character')
@@ -316,41 +271,14 @@ def bot_message(message):
             markup.add(d4, d6, d8, d10, d12, d20, back)
             bot.send_message(message.chat.id, 'Какой кубик кидаешь?', reply_markup=markup)
             
-        elif message.text == 'd4':
+        elif message.text in dices:
+            dice = int(message.text.replace("d", ""))
             markup = types.InlineKeyboardMarkup()
-            item1 = types.InlineKeyboardButton("Ещё один?", callback_data='d4')
+            item1 = types.InlineKeyboardButton("Ещё один?", callback_data=f'{message.text}')
             markup.add(item1)
-            bot.send_message(message.chat.id, f'd4: {str(random.randint(1,4))}', reply_markup=markup)
-
-        elif message.text == 'd6':
-            markup = types.InlineKeyboardMarkup()
-            item1 = types.InlineKeyboardButton("Ещё один?", callback_data='d6')
-            markup.add(item1)
-            bot.send_message(message.chat.id, f'd6: {str(random.randint(1,6))}', reply_markup=markup)
-
-        elif message.text == 'd8':
-            markup = types.InlineKeyboardMarkup()
-            item1 = types.InlineKeyboardButton("Ещё один?", callback_data='d8')
-            markup.add(item1)
-            bot.send_message(message.chat.id, f'd8: {str(random.randint(1,8))}', reply_markup=markup)
-
-        elif message.text == 'd10':
-            markup = types.InlineKeyboardMarkup()
-            item1 = types.InlineKeyboardButton("Ещё один?", callback_data='d10')
-            markup.add(item1)
-            bot.send_message(message.chat.id, f'd10: {str(random.randint(0,9))}', reply_markup=markup)
-
-        elif message.text == 'd12':
-            markup = types.InlineKeyboardMarkup()
-            item1 = types.InlineKeyboardButton("Ещё один?", callback_data='d12')
-            markup.add(item1)
-            bot.send_message(message.chat.id, f'd12: {str(random.randint(1,12))}', reply_markup=markup)
-
-        elif message.text == 'd20':
-            markup = types.InlineKeyboardMarkup()
-            item1 = types.InlineKeyboardButton("Ещё один?", callback_data='d20')
-            markup.add(item1)
-            bot.send_message(message.chat.id, f'd20: {str(random.randint(1,20))}', reply_markup=markup)
+            if message.text == "d10":
+                dice -= 1
+            bot.send_message(message.chat.id, f'{message.text}: {str(random.randint(1,dice))}', reply_markup=markup)
         
         # Обзор персонажа
         elif message.text == 'Персонаж':
@@ -385,37 +313,25 @@ def bot_message(message):
 
         # Вывод характеристик
         elif message.text == 'Характеристики':
-            if db.if_character_exist(message.chat.id) == "does_not_exist":
-                bot.send_message(message.chat.id, 'В этом мире у тебя никого нет. Ты полностью один. Смирись или создай себе перса через /start')
-            else:
+            if show_does_not_exist(message):
                 bot.send_message(message.chat.id, db.request_for_characteristics(message.chat.id))
 
         # Вывод навыков
         elif message.text == 'Навыки':
-            if db.if_character_exist(message.chat.id) == "does_not_exist":
-                bot.send_message(message.chat.id, 'В этом мире у тебя никого нет. Ты полностью один. Смирись или создай себе перса через /start')
-            else:
+            if show_does_not_exist(message):
                 bot.send_message(message.chat.id, db.request_for_skills(message.chat.id))
             
-
         # Умения 
         elif message.text == 'Умения':
-            if db.if_character_exist(message.chat.id) == "does_not_exist":
-                bot.send_message(message.chat.id, 'В этом мире у тебя никого нет. Ты полностью один. Смирись или создай себе перса через /start')
-            else:
+            if show_does_not_exist(message):
                 markup = types.InlineKeyboardMarkup()
                 item1 = types.InlineKeyboardButton("Добавить", callback_data="add_feature")
                 item2 = types.InlineKeyboardButton("Удалить", callback_data="delete_feature")
                 markup.add(item1, item2)
                 bot.send_message(message.chat.id, db.features_traits(message.chat.id), reply_markup=markup)
             
-
         # В разработке
         else:
             bot.send_message(message.chat.id, 'Много хочешь (скоро получишь)')
-
-       
-        
-
 
 bot.polling(none_stop=True)
